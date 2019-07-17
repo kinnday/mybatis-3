@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 /**
  * @author Eduardo Macarron
  */
+// fxc- 不同日志 的适配器
 class Slf4jLoggerImpl implements Log {
 
   private final Logger log;

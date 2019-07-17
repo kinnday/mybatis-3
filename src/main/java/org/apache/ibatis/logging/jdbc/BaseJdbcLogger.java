@@ -38,9 +38,12 @@ import org.apache.ibatis.reflection.ArrayUtil;
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
+// JDBC-日志 -基类
 public abstract class BaseJdbcLogger {
 
+//  所有设置参数的 方法集合
   protected static final Set<String> SET_METHODS;
+//  sql执行 方法集合
   protected static final Set<String> EXECUTE_METHODS = new HashSet<>();
 
   private final Map<Object, Object> columnMap = new HashMap<>();

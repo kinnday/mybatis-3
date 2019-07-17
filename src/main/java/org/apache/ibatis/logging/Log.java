@@ -20,6 +20,8 @@ package org.apache.ibatis.logging;
  */
 public interface Log {
 
+// 自定义了 日志需要基础方法
+//  MyBatis统一提供了trace、debug、warn、error四个级别
   boolean isDebugEnabled();
 
   boolean isTraceEnabled();
