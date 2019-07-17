@@ -52,6 +52,7 @@ public class UnpooledDataSource implements DataSource {
   private Integer defaultNetworkTimeout;
 
   static {
+//   获取已经加载的驱动
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
@@ -228,6 +229,7 @@ public class UnpooledDataSource implements DataSource {
       Class<?> driverType;
       try {
         if (driverClassLoader != null) {
+//          如果没有，则重新加载
           driverType = Class.forName(driver, true, driverClassLoader);
         } else {
           driverType = Resources.classForName(driver);
