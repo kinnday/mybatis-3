@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2015 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.apache.ibatis.reflection.SystemMetaObject;
 /**
  * @author Clinton Begin
  */
+//不用连接池的数据连接工厂
 public class UnpooledDataSourceFactory implements DataSourceFactory {
 
   private static final String DRIVER_PROPERTY_PREFIX = "driver.";
@@ -41,7 +42,9 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
   @Override
   public void setProperties(Properties properties) {
     Properties driverProperties = new Properties();
+    //创建DataSource相应的metaObject，方便赋值
     MetaObject metaDataSource = SystemMetaObject.forObject(dataSource);
+    //遍历properties，将属性设置到DataSource中
     for (Object key : properties.keySet()) {
       String propertyName = (String) key;
       if (propertyName.startsWith(DRIVER_PROPERTY_PREFIX)) {
@@ -55,6 +58,7 @@ public class UnpooledDataSourceFactory implements DataSourceFactory {
         throw new DataSourceException("Unknown DataSource property: " + propertyName);
       }
     }
+    //设置DataSource.driverProperties属性
     if (driverProperties.size() > 0) {
       metaDataSource.setValue("driverProperties", driverProperties);
     }

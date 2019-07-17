@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import javax.sql.DataSource;
@@ -37,22 +36,22 @@ import org.apache.ibatis.io.Resources;
  * @author Eduardo Macarron
  */
 public class UnpooledDataSource implements DataSource {
-
-  private ClassLoader driverClassLoader;
-  private Properties driverProperties;
-  private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();
+  
+  private ClassLoader driverClassLoader;//驱动类的类加载器
+  private Properties driverProperties;//数据库连接相关配置信息
+  private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<>();//缓存已注册的数据库驱动类
 
   private String driver;
   private String url;
   private String username;
   private String password;
 
-  private Boolean autoCommit;
-  private Integer defaultTransactionIsolationLevel;
-  private Integer defaultNetworkTimeout;
+  private Boolean autoCommit;//是否自动提交
+  private Integer defaultTransactionIsolationLevel;//事务隔离级别
 
+  
+  //提问：为什么Class.forName("com.mysql.jdbc.Driver")后，驱动就被注册到DriverManager?
   static {
-//   获取已经加载的驱动
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
@@ -102,22 +101,22 @@ public class UnpooledDataSource implements DataSource {
   }
 
   @Override
-  public void setLoginTimeout(int loginTimeout) {
+  public void setLoginTimeout(int loginTimeout) throws SQLException {
     DriverManager.setLoginTimeout(loginTimeout);
   }
 
   @Override
-  public int getLoginTimeout() {
+  public int getLoginTimeout() throws SQLException {
     return DriverManager.getLoginTimeout();
   }
 
   @Override
-  public void setLogWriter(PrintWriter logWriter) {
+  public void setLogWriter(PrintWriter logWriter) throws SQLException {
     DriverManager.setLogWriter(logWriter);
   }
 
   @Override
-  public PrintWriter getLogWriter() {
+  public PrintWriter getLogWriter() throws SQLException {
     return DriverManager.getLogWriter();
   }
 
@@ -185,24 +184,6 @@ public class UnpooledDataSource implements DataSource {
     this.defaultTransactionIsolationLevel = defaultTransactionIsolationLevel;
   }
 
-  /**
-   * @since 3.5.2
-   */
-  public Integer getDefaultNetworkTimeout() {
-    return defaultNetworkTimeout;
-  }
-
-  /**
-   * Sets the default network timeout value to wait for the database operation to complete. See {@link Connection#setNetworkTimeout(java.util.concurrent.Executor, int)}
-   * 
-   * @param defaultNetworkTimeout
-   *          The time in milliseconds to wait for the database operation to complete.
-   * @since 3.5.2
-   */
-  public void setDefaultNetworkTimeout(Integer defaultNetworkTimeout) {
-    this.defaultNetworkTimeout = defaultNetworkTimeout;
-  }
-
   private Connection doGetConnection(String username, String password) throws SQLException {
     Properties props = new Properties();
     if (driverProperties != null) {
@@ -217,9 +198,11 @@ public class UnpooledDataSource implements DataSource {
     return doGetConnection(props);
   }
 
+  //从这个代码可以看出，unpooledDatasource获取连接的方式和手动获取连接的方式是一样的
   private Connection doGetConnection(Properties properties) throws SQLException {
     initializeDriver();
     Connection connection = DriverManager.getConnection(url, properties);
+    //设置事务是否自动提交，事务的隔离级别
     configureConnection(connection);
     return connection;
   }
@@ -229,7 +212,6 @@ public class UnpooledDataSource implements DataSource {
       Class<?> driverType;
       try {
         if (driverClassLoader != null) {
-//          如果没有，则重新加载
           driverType = Class.forName(driver, true, driverClassLoader);
         } else {
           driverType = Resources.classForName(driver);
@@ -246,9 +228,6 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private void configureConnection(Connection conn) throws SQLException {
-    if (defaultNetworkTimeout != null) {
-      conn.setNetworkTimeout(Executors.newSingleThreadExecutor(), defaultNetworkTimeout);
-    }
     if (autoCommit != null && autoCommit != conn.getAutoCommit()) {
       conn.setAutoCommit(autoCommit);
     }
@@ -294,7 +273,7 @@ public class UnpooledDataSource implements DataSource {
       return this.driver.jdbcCompliant();
     }
 
-    @Override
+    // @Override only valid jdk7+
     public Logger getParentLogger() {
       return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     }
@@ -310,7 +289,7 @@ public class UnpooledDataSource implements DataSource {
     return false;
   }
 
-  @Override
+  // @Override only valid jdk7+
   public Logger getParentLogger() {
     // requires JDK version 1.6
     return Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
