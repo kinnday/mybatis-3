@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
  */
 package org.apache.ibatis.logging.jdbc;
 
-import java.lang.reflect.Method;
 import java.sql.Array;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,32 +25,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.reflection.ArrayUtil;
 
 /**
- * Base class for proxies to do logging.
- *
+ * Base class for proxies to do logging
+ * 
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
-// JDBC-日志 -基类
+//所有日志增强的抽象基类
 public abstract class BaseJdbcLogger {
 
-//  所有设置参数的 方法集合
-  protected static final Set<String> SET_METHODS;
-//  sql执行 方法集合
+  //保存preparestatment中常用的set方法（占位符赋值）
+  protected static final Set<String> SET_METHODS = new HashSet<>();
+  //保存preparestatment中常用的执行sql语句的方法
   protected static final Set<String> EXECUTE_METHODS = new HashSet<>();
 
+  //保存preparestatment中set方法的键值对
   private final Map<Object, Object> columnMap = new HashMap<>();
 
+  //保存preparestatment中set方法的key值
   private final List<Object> columnNames = new ArrayList<>();
+  //保存preparestatment中set方法的value值
   private final List<Object> columnValues = new ArrayList<>();
 
-  protected final Log statementLog;
-  protected final int queryStack;
+  protected Log statementLog;
+  protected int queryStack;
 
   /*
    * Default constructor
@@ -67,11 +67,30 @@ public abstract class BaseJdbcLogger {
   }
 
   static {
-    SET_METHODS = Arrays.stream(PreparedStatement.class.getDeclaredMethods())
-            .filter(method -> method.getName().startsWith("set"))
-            .filter(method -> method.getParameterCount() > 1)
-            .map(Method::getName)
-            .collect(Collectors.toSet());
+    SET_METHODS.add("setString");
+    SET_METHODS.add("setNString");
+    SET_METHODS.add("setInt");
+    SET_METHODS.add("setByte");
+    SET_METHODS.add("setShort");
+    SET_METHODS.add("setLong");
+    SET_METHODS.add("setDouble");
+    SET_METHODS.add("setFloat");
+    SET_METHODS.add("setTimestamp");
+    SET_METHODS.add("setDate");
+    SET_METHODS.add("setTime");
+    SET_METHODS.add("setArray");
+    SET_METHODS.add("setBigDecimal");
+    SET_METHODS.add("setAsciiStream");
+    SET_METHODS.add("setBinaryStream");
+    SET_METHODS.add("setBlob");
+    SET_METHODS.add("setBoolean");
+    SET_METHODS.add("setBytes");
+    SET_METHODS.add("setCharacterStream");
+    SET_METHODS.add("setNCharacterStream");
+    SET_METHODS.add("setClob");
+    SET_METHODS.add("setNClob");
+    SET_METHODS.add("setObject");
+    SET_METHODS.add("setNull");
 
     EXECUTE_METHODS.add("execute");
     EXECUTE_METHODS.add("executeUpdate");

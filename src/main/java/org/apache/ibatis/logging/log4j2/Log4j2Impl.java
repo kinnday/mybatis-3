@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,11 +28,8 @@ public class Log4j2Impl implements Log {
   private final Log log;
 
   public Log4j2Impl(String clazz) {
-//    限制 依赖的 日志jar包 不向下传递
-//    <optional>false</optional>
     Logger logger = LogManager.getLogger(clazz);
 
-//    根据实例类型- 创建不同的具体日志实例
     if (logger instanceof AbstractLogger) {
       log = new Log4j2AbstractLoggerImpl((AbstractLogger) logger);
     } else {

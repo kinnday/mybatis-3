@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2017 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 /**
  * @author Eduardo Macarron
  */
-// fxc- 不同日志 的适配器
 class Slf4jLoggerImpl implements Log {
 
   private final Logger log;

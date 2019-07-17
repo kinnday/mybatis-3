@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,16 +24,15 @@ import java.lang.reflect.Constructor;
 public final class LogFactory {
 
   /**
-   * Marker to be used by logging implementations that support markers.
+   * Marker to be used by logging implementations that support markers
    */
   public static final String MARKER = "MYBATIS";
 
-// 初始化 构造方法为空
+  //被选定的第三方日志组件适配器的构造方法
   private static Constructor<? extends Log> logConstructor;
 
-  //  fxc-第三方日志插件加载优先级如下：slf4J → commonsLoging → Log4J2 → Log4J → JdkLog;
+  //自动扫描日志实现，并且第三方日志插件加载优先级如下：slf4J → commonsLoging → Log4J2 → Log4J → JdkLog
   static {
-//  双引号 是 方法的引用- jdk8
     tryImplementation(LogFactory::useSlf4jLogging);
     tryImplementation(LogFactory::useCommonsLogging);
     tryImplementation(LogFactory::useLog4J2Logging);
@@ -63,7 +62,6 @@ public final class LogFactory {
   }
 
   public static synchronized void useSlf4jLogging() {
-//  调用具体 适配器的构造方法
     setImplementation(org.apache.ibatis.logging.slf4j.Slf4jImpl.class);
   }
 
@@ -91,21 +89,19 @@ public final class LogFactory {
     setImplementation(org.apache.ibatis.logging.nologging.NoLoggingImpl.class);
   }
 
+  
   private static void tryImplementation(Runnable runnable) {
-//    当构造方法为空时才加载， 从而实现优先加载
-    if (logConstructor == null) {
+    if (logConstructor == null) {//当构造方法不为空才执行方法
       try {
         runnable.run();
       } catch (Throwable t) {
         // ignore
-//        不处理异常， 再找下一个 日志类型
       }
     }
   }
-
+  //通过指定的log类来初始化构造方法
   private static void setImplementation(Class<? extends Log> implClass) {
     try {
-//    通过反射-获取 构造函数
       Constructor<? extends Log> candidate = implClass.getConstructor(String.class);
       Log log = candidate.newInstance(LogFactory.class.getName());
       if (log.isDebugEnabled()) {
