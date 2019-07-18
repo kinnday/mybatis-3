@@ -26,6 +26,7 @@ import java.util.List;
  */
 public class PoolState {
 
+//  非常非常重要的一个数据结构
   protected PooledDataSource dataSource;
   //空闲的连接池资源集合
   protected final List<PooledConnection> idleConnections = new ArrayList<>();

@@ -242,8 +242,10 @@ class PooledConnection implements InvocationHandler {
    */
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+//   通过动态代理增强！！
     String methodName = method.getName();
-    if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {//如果是调用连接的close方法，不是真正的关闭，而是回收到连接池
+    if (CLOSE.hashCode() == methodName.hashCode() && CLOSE.equals(methodName)) {
+      //如果是调用连接的close方法，不是真正的关闭，而是回收到连接池
       dataSource.pushConnection(this);//通过pooled数据源来进行回收
       return null;
     } else {
