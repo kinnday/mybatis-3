@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,17 +19,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 import org.apache.ibatis.binding.MapperRegistry;
 import org.apache.ibatis.builder.CacheRefResolver;
-import org.apache.ibatis.builder.IncompleteElementException;
 import org.apache.ibatis.builder.ResultMapResolver;
 import org.apache.ibatis.builder.annotation.MethodResolver;
 import org.apache.ibatis.builder.xml.XMLStatementBuilder;
@@ -71,7 +68,6 @@ import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.ParameterMap;
 import org.apache.ibatis.mapping.ResultMap;
-import org.apache.ibatis.mapping.ResultSetType;
 import org.apache.ibatis.mapping.VendorDatabaseIdProvider;
 import org.apache.ibatis.parsing.XNode;
 import org.apache.ibatis.plugin.Interceptor;
@@ -102,37 +98,69 @@ public class Configuration {
 
   protected Environment environment;
 
+  /* 是否启用行内嵌套语句**/
   protected boolean safeRowBoundsEnabled;
   protected boolean safeResultHandlerEnabled = true;
+  /* 是否启用数据组A_column自动映射到Java类中的驼峰命名的属性**/
   protected boolean mapUnderscoreToCamelCase;
+  
+  /*当对象使用延迟加载时 属性的加载取决于能被引用到的那些延迟属性,否则,按需加载(需要的是时候才去加载)**/
   protected boolean aggressiveLazyLoading;
+  
+  /*是否允许单条sql 返回多个数据集  (取决于驱动的兼容性) default:true **/
   protected boolean multipleResultSetsEnabled = true;
+  
+  /*-允许JDBC 生成主键。需要驱动器支持。如果设为了true，这个设置将强制使用被生成的主键，有一些驱动器不兼容不过仍然可以执行。  default:false**/
   protected boolean useGeneratedKeys;
+  
+  /* 使用列标签代替列名。不同的驱动在这方面会有不同的表现， 具体可参考相关驱动文档或通过测试这两种不同的模式来观察所用驱动的结果。**/
   protected boolean useColumnLabel = true;
+  
+  /*配置全局性的cache开关，默认为true**/
   protected boolean cacheEnabled = true;
   protected boolean callSettersOnNulls;
   protected boolean useActualParamName = true;
   protected boolean returnInstanceForEmptyRow;
 
+  /* 日志打印所有的前缀 **/
   protected String logPrefix;
-  protected Class<? extends Log> logImpl;
-  protected Class<? extends VFS> vfsImpl;
+  
+  /* 指定 MyBatis 所用日志的具体实现，未指定时将自动查找**/
+  protected Class <? extends Log> logImpl;
+  protected Class <? extends VFS> vfsImpl;
+  /* 设置本地缓存范围，session：就会有数据的共享，statement：语句范围，这样不会有数据的共享**/
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
+  /* 设置但JDBC类型为空时,某些驱动程序 要指定值**/
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
+  
+  /* 设置触发延迟加载的方法**/
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
+  
+  /* 设置驱动等待数据响应超时数**/
   protected Integer defaultStatementTimeout;
+  
+  /* 设置驱动返回结果数的大小**/
   protected Integer defaultFetchSize;
-  protected ResultSetType defaultResultSetType;
+  
+  /* 执行类型，有simple、resue及batch**/
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+  
+  /*指定 MyBatis 应如何自动映射列到字段或属性*/
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
 
   protected Properties variables = new Properties();
+  
   protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
+  
+  /*MyBatis每次创建结果对象的新实例时，它都会使用对象工厂（ObjectFactory）去构建POJO*/
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
   protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
 
+  /*延迟加载的全局开关*/
   protected boolean lazyLoadingEnabled = false;
+  
+  /*指定 Mybatis 创建具有延迟加载能力的对象所用到的代理工具*/
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
   protected String databaseId;
@@ -143,22 +171,38 @@ public class Configuration {
    * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
    */
   protected Class<?> configurationFactory;
-
-  protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  
+  /*插件集合*/
   protected final InterceptorChain interceptorChain = new InterceptorChain();
+  
+  /*TypeHandler注册中心*/
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+  
+  /*TypeAlias注册中心*/
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
+  //-------------------------------------------------------------
 
-  protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection")
-      .conflictMessageProducer((savedValue, targetValue) ->
-          ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
+  /*mapper接口的动态代理注册中心*/
+  protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+
+  /*mapper文件中增删改查操作的注册中心*/
+  protected final Map<String, MappedStatement> mappedStatements = new StrictMap<>("Mapped Statements collection");
+  
+  /*mapper文件中配置cache节点的 二级缓存*/
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
+  
+  /*mapper文件中配置的所有resultMap对象  key为命名空间+ID*/
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
+  
+  /*mapper文件中配置KeyGenerator的insert和update节点，key为命名空间+ID*/
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 
+  /*加载到的所有*mapper.xml文件*/
   protected final Set<String> loadedResources = new HashSet<>();
+  
+  /*mapper文件中配置的sql元素，key为命名空间+ID*/
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();
@@ -433,20 +477,6 @@ public class Configuration {
     this.defaultFetchSize = defaultFetchSize;
   }
 
-  /**
-   * @since 3.5.2
-   */
-  public ResultSetType getDefaultResultSetType() {
-    return defaultResultSetType;
-  }
-
-  /**
-   * @since 3.5.2
-   */
-  public void setDefaultResultSetType(ResultSetType defaultResultSetType) {
-    this.defaultResultSetType = defaultResultSetType;
-  }
-
   public boolean isUseColumnLabel() {
     return useColumnLabel;
   }
@@ -507,11 +537,11 @@ public class Configuration {
   }
 
   public ReflectorFactory getReflectorFactory() {
-    return reflectorFactory;
+	  return reflectorFactory;
   }
 
   public void setReflectorFactory(ReflectorFactory reflectorFactory) {
-    this.reflectorFactory = reflectorFactory;
+	  this.reflectorFactory = reflectorFactory;
   }
 
   public ObjectFactory getObjectFactory() {
@@ -552,20 +582,7 @@ public class Configuration {
     return languageRegistry.getDefaultDriver();
   }
 
-  /**
-   * @since 3.5.1
-   */
-  public LanguageDriver getLanguageDriver(Class<? extends LanguageDriver> langClass) {
-    if (langClass == null) {
-      return languageRegistry.getDefaultDriver();
-    }
-    languageRegistry.register(langClass);
-    return languageRegistry.getDriver(langClass);
-  }
-
-  /**
-   * @deprecated Use {@link #getDefaultScriptingLanguageInstance()}
-   */
+  /** @deprecated Use {@link #getDefaultScriptingLanguageInstance()} */
   @Deprecated
   public LanguageDriver getDefaultScriptingLanuageInstance() {
     return getDefaultScriptingLanguageInstance();
@@ -589,7 +606,8 @@ public class Configuration {
   }
 
   public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
-    StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+	//创建RoutingStatementHandler对象，实际由statmentType来指定真实的StatementHandler来实现
+	StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
   }
@@ -609,9 +627,11 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    //如果有<cache>节点，通过装饰器，添加二级缓存的能力
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
+    //通过interceptorChain遍历所有的插件为executor增强，添加插件的功能
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }
@@ -804,58 +824,33 @@ public class Configuration {
    * statement validation.
    */
   protected void buildAllStatements() {
-    parsePendingResultMaps();
+    if (!incompleteResultMaps.isEmpty()) {
+      synchronized (incompleteResultMaps) {
+        // This always throws a BuilderException.
+        incompleteResultMaps.iterator().next().resolve();
+      }
+    }
     if (!incompleteCacheRefs.isEmpty()) {
       synchronized (incompleteCacheRefs) {
-        incompleteCacheRefs.removeIf(x -> x.resolveCacheRef() != null);
+        // This always throws a BuilderException.
+        incompleteCacheRefs.iterator().next().resolveCacheRef();
       }
     }
     if (!incompleteStatements.isEmpty()) {
       synchronized (incompleteStatements) {
-        incompleteStatements.removeIf(x -> {
-          x.parseStatementNode();
-          return true;
-        });
+        // This always throws a BuilderException.
+        incompleteStatements.iterator().next().parseStatementNode();
       }
     }
     if (!incompleteMethods.isEmpty()) {
       synchronized (incompleteMethods) {
-        incompleteMethods.removeIf(x -> {
-          x.resolve();
-          return true;
-        });
+        // This always throws a BuilderException.
+        incompleteMethods.iterator().next().resolve();
       }
     }
   }
 
-  private void parsePendingResultMaps() {
-    if (incompleteResultMaps.isEmpty()) {
-      return;
-    }
-    synchronized (incompleteResultMaps) {
-      boolean resolved;
-      IncompleteElementException ex = null;
-      do {
-        resolved = false;
-        Iterator<ResultMapResolver> iterator = incompleteResultMaps.iterator();
-        while (iterator.hasNext()) {
-          try {
-            iterator.next().resolve();
-            iterator.remove();
-            resolved = true;
-          } catch (IncompleteElementException e) {
-            ex = e;
-          }
-        }
-      } while (resolved);
-      if (!incompleteResultMaps.isEmpty() && ex != null) {
-        // At least one result map is unresolvable.
-        throw ex;
-      }
-    }
-  }
-
-  /**
+  /*
    * Extracts namespace from fully qualified statement id.
    *
    * @param statementId
@@ -904,7 +899,6 @@ public class Configuration {
 
     private static final long serialVersionUID = -4950446264854982944L;
     private final String name;
-    private BiFunction<V, V, String> conflictMessageProducer;
 
     public StrictMap(String name, int initialCapacity, float loadFactor) {
       super(initialCapacity, loadFactor);
@@ -926,25 +920,10 @@ public class Configuration {
       this.name = name;
     }
 
-    /**
-     * Assign a function for producing a conflict error message when contains value with the same key.
-     * <p>
-     * function arguments are 1st is saved value and 2nd is target value.
-     * @param conflictMessageProducer A function for producing a conflict error message
-     * @return a conflict error message
-     * @since 3.5.0
-     */
-    public StrictMap<V> conflictMessageProducer(BiFunction<V, V, String> conflictMessageProducer) {
-      this.conflictMessageProducer = conflictMessageProducer;
-      return this;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public V put(String key, V value) {
       if (containsKey(key)) {
-        throw new IllegalArgumentException(name + " already contains value for " + key
-            + (conflictMessageProducer == null ? "" : conflictMessageProducer.apply(super.get(key), value)));
+        throw new IllegalArgumentException(name + " already contains value for " + key);
       }
       if (key.contains(".")) {
         final String shortKey = getShortName(key);
@@ -957,7 +936,6 @@ public class Configuration {
       return super.put(key, value);
     }
 
-    @Override
     public V get(Object key) {
       V value = super.get(key);
       if (value == null) {
@@ -970,6 +948,11 @@ public class Configuration {
       return value;
     }
 
+    private String getShortName(String key) {
+      final String[] keyParts = key.split("\\.");
+      return keyParts[keyParts.length - 1];
+    }
+
     protected static class Ambiguity {
       final private String subject;
 
@@ -980,11 +963,6 @@ public class Configuration {
       public String getSubject() {
         return subject;
       }
-    }
-
-    private String getShortName(String key) {
-      final String[] keyParts = key.split("\\.");
-      return keyParts[keyParts.length - 1];
     }
   }
 

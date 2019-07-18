@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.apache.ibatis.reflection.ExceptionUtil;
  */
 public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
+  //底层封装的
   private final SqlSessionFactory sqlSessionFactory;
   private final SqlSession sqlSessionProxy;
 
@@ -158,27 +159,27 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
   @Override
   public <T> T selectOne(String statement) {
-    return sqlSessionProxy.selectOne(statement);
+    return sqlSessionProxy.<T> selectOne(statement);
   }
 
   @Override
   public <T> T selectOne(String statement, Object parameter) {
-    return sqlSessionProxy.selectOne(statement, parameter);
+    return sqlSessionProxy.<T> selectOne(statement, parameter);
   }
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, String mapKey) {
-    return sqlSessionProxy.selectMap(statement, mapKey);
+    return sqlSessionProxy.<K, V> selectMap(statement, mapKey);
   }
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey) {
-    return sqlSessionProxy.selectMap(statement, parameter, mapKey);
+    return sqlSessionProxy.<K, V> selectMap(statement, parameter, mapKey);
   }
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
-    return sqlSessionProxy.selectMap(statement, parameter, mapKey, rowBounds);
+    return sqlSessionProxy.<K, V> selectMap(statement, parameter, mapKey, rowBounds);
   }
 
   @Override
@@ -198,17 +199,17 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
   @Override
   public <E> List<E> selectList(String statement) {
-    return sqlSessionProxy.selectList(statement);
+    return sqlSessionProxy.<E> selectList(statement);
   }
 
   @Override
   public <E> List<E> selectList(String statement, Object parameter) {
-    return sqlSessionProxy.selectList(statement, parameter);
+    return sqlSessionProxy.<E> selectList(statement, parameter);
   }
 
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
-    return sqlSessionProxy.selectList(statement, parameter, rowBounds);
+    return sqlSessionProxy.<E> selectList(statement, parameter, rowBounds);
   }
 
   @Override
