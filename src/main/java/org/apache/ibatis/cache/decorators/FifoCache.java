@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@ package org.apache.ibatis.cache.decorators;
 
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.ibatis.cache.Cache;
 
 /**
- * FIFO (first in, first out) cache decorator.
+ * FIFO (first in, first out) cache decorator
  *
  * @author Clinton Begin
  */
@@ -71,6 +72,11 @@ public class FifoCache implements Cache {
   public void clear() {
     delegate.clear();
     keyList.clear();
+  }
+
+  @Override
+  public ReadWriteLock getReadWriteLock() {
+    return null;
   }
 
   private void cycleKeyList(Object key) {

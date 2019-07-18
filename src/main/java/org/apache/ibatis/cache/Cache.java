@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * SPI for cache providers.
- * <p>
+ * 
  * One instance of cache will be created for each namespace.
- * <p>
+ * 
  * The cache implementation must have a constructor that receives the cache id as an String parameter.
- * <p>
+ * 
  * MyBatis will pass the namespace as id to the constructor.
- *
+ * 
  * <pre>
  * public MyCache(final String id) {
  *  if (id == null) {
@@ -44,57 +44,55 @@ public interface Cache {
   /**
    * @return The identifier of this cache
    */
-  String getId();
+  String getId();//缓存实现类的id
 
   /**
    * @param key Can be any object but usually it is a {@link CacheKey}
    * @param value The result of a select.
    */
-  void putObject(Object key, Object value);
+  void putObject(Object key, Object value);//往缓存中添加数据，key一般是CacheKey对象
 
   /**
    * @param key The key
    * @return The object stored in the cache.
    */
-  Object getObject(Object key);
+  Object getObject(Object key);//根据指定的key从缓存获取数据
 
   /**
-   * As of 3.3.0 this method is only called during a rollback
+   * As of 3.3.0 this method is only called during a rollback 
    * for any previous value that was missing in the cache.
-   * This lets any blocking cache to release the lock that
+   * This lets any blocking cache to release the lock that 
    * may have previously put on the key.
-   * A blocking cache puts a lock when a value is null
+   * A blocking cache puts a lock when a value is null 
    * and releases it when the value is back again.
-   * This way other threads will wait for the value to be
+   * This way other threads will wait for the value to be 
    * available instead of hitting the database.
    *
-   *
+   * 
    * @param key The key
    * @return Not used
    */
-  Object removeObject(Object key);
+  Object removeObject(Object key);//根据指定的key从缓存删除数据
 
   /**
-   * Clears this cache instance.
-   */
-  void clear();
+   * Clears this cache instance
+   */  
+  void clear();//清空缓存
 
   /**
    * Optional. This method is not called by the core.
-   *
+   * 
    * @return The number of elements stored in the cache (not its capacity).
    */
-  int getSize();
-
-  /**
+  int getSize();//获取缓存的个数
+  
+  /** 
    * Optional. As of 3.2.6 this method is no longer called by the core.
-   * <p>
+   *  
    * Any locking needed by the cache must be provided internally by the cache provider.
-   *
-   * @return A ReadWriteLock
+   * 
+   * @return A ReadWriteLock 
    */
-  default ReadWriteLock getReadWriteLock() {
-    return null;
-  }
+  ReadWriteLock getReadWriteLock();//获取读写锁
 
 }
