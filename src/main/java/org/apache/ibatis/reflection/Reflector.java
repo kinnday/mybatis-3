@@ -44,6 +44,7 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  *
  * @author Clinton Begin
  */
+// 对Class对象 所有属性的封装
 public class Reflector {
 
   private final Class<?> type;//对应的class

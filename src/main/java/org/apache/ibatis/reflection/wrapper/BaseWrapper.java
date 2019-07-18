@@ -27,6 +27,7 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  */
 public abstract class BaseWrapper implements ObjectWrapper {
 
+//  对象的封装， Relector 是类的元属性的封装。
   protected static final Object[] NO_ARGUMENTS = new Object[0];
   protected final MetaObject metaObject;
 

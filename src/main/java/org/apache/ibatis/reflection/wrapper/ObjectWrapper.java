@@ -26,10 +26,10 @@ import org.apache.ibatis.reflection.property.PropertyTokenizer;
  */
 public interface ObjectWrapper {
 
-  //获取对象指定属性的值
+  //核心功能1：获取对象指定属性的值
   Object get(PropertyTokenizer prop);
 
-  //设置对象指定属性的值
+  //核心功能2：设置对象指定属性的值
   void set(PropertyTokenizer prop, Object value);
 
   String findProperty(String name, boolean useCamelCaseMapping);
@@ -47,13 +47,13 @@ public interface ObjectWrapper {
   boolean hasGetter(String name);
 
   MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory);
-  //判断当前对象是否为集合
+  //核心功能：判断当前对象是否为集合
   boolean isCollection();
   
-  //当前集合添加一个元素
+  //核心功能：当前集合添加一个元素
   void add(Object element);
   
-  //当前集合添加另外一个集合
+  //核心功能：当前集合添加另外一个集合
   <E> void addAll(List<E> element);
 
 }
