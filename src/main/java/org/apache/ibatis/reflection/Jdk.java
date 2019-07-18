@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@ public class Jdk {
 
   /**
    * <code>true</code> if <code>java.lang.reflect.Parameter</code> is available.
-   * @deprecated Since 3.5.0, Will remove this field at feature(next major version up)
    */
-  @Deprecated
   public static final boolean parameterExists;
 
   static {
@@ -40,10 +38,6 @@ public class Jdk {
     parameterExists = available;
   }
 
-  /**
-   * @deprecated Since 3.5.0, Will remove this field at feature(next major version up)
-   */
-  @Deprecated
   public static final boolean dateAndTimeApiExists;
 
   static {
@@ -57,10 +51,6 @@ public class Jdk {
     dateAndTimeApiExists = available;
   }
 
-  /**
-   * @deprecated Since 3.5.0, Will remove this field at feature(next major version up)
-   */
-  @Deprecated
   public static final boolean optionalExists;
 
   static {
