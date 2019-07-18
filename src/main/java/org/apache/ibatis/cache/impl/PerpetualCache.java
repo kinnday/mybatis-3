@@ -24,10 +24,12 @@ import org.apache.ibatis.cache.CacheException;
 /**
  * @author Clinton Begin
  */
+// 具体的缓存实现类
 public class PerpetualCache implements Cache {
 
   private final String id;
 
+//  缓存是基于map实现的
   private Map<Object, Object> cache = new HashMap<>();
 
   public PerpetualCache(String id) {

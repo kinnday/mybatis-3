@@ -22,6 +22,7 @@ import org.apache.ibatis.logging.LogFactory;
 /**
  * @author Clinton Begin
  */
+// 标准的装饰器模式
 public class LoggingCache implements Cache {
 
   private final Log log;
