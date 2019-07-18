@@ -147,6 +147,7 @@ public class DefaultSqlSession implements SqlSession {
       //从configuration中获取要执行的sql语句的配置信息
       MappedStatement ms = configuration.getMappedStatement(statement);
       //通过executor执行语句，并返回指定的结果集
+//      fxc-万剑归一， 最终都是调用这个方法； 执行器的 query方法！
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

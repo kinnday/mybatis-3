@@ -87,7 +87,8 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     return configuration;
   }
 
-  //从数据源获取数据库连接
+  //从数据源获取数据库连接【从数据源直接创建】
+//  fxc-项目基本上都是这种方式
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
@@ -109,7 +110,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     }
   }
 
-  //从数据库连接获取sqlSession
+  //从数据库连接获取sqlSession【基于已有的连接获取】
   private SqlSession openSessionFromConnection(ExecutorType execType, Connection connection) {
     try {
      //获取当前连接是否设置事务自动提交
