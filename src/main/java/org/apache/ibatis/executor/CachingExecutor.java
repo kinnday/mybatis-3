@@ -96,6 +96,7 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
+//   fxc- executor-先查询二级缓存
 	//从MappedStatement中获取二级缓存
     Cache cache = ms.getCache();
     if (cache != null) {

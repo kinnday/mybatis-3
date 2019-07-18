@@ -38,6 +38,7 @@ import org.apache.ibatis.transaction.Transaction;
  */
 public class ReuseExecutor extends BaseExecutor {
 
+//  与simpleExecutor的区别，这里有个缓存容器
   private final Map<String, Statement> statementMap = new HashMap<>();
 
   public ReuseExecutor(Configuration configuration, Transaction transaction) {
@@ -86,8 +87,10 @@ public class ReuseExecutor extends BaseExecutor {
     String sql = boundSql.getSql();//获取sql语句
     if (hasStatementFor(sql)) {//根据sql语句检查是否缓存了对应的Statement
       stmt = getStatement(sql);//获取缓存的Statement
-      applyTransactionTimeout(stmt);//设置新的超时时间
-    } else {//缓存中没有statment，创建statment过程和SimpleExecutor类似
+      applyTransactionTimeout(stmt);//fxc-设置新的超时时间
+    } else {
+      //缓存中没有statment，创建statment过程和SimpleExecutor类似
+//      与 simpleExecutor 一模一样
       Connection connection = getConnection(statementLog);
       stmt = handler.prepare(connection, transaction.getTimeout());
       putStatement(sql, stmt);//放入缓存中
