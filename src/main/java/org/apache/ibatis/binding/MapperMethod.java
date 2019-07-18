@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,22 +15,15 @@
  */
 package org.apache.ibatis.binding;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.mapping.StatementType;
+import org.apache.ibatis.reflection.Jdk;
 import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.reflection.OptionalUtil;
 import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.reflection.TypeParameterResolver;
 import org.apache.ibatis.session.Configuration;
@@ -38,15 +31,24 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+
 /**
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
  * @author Kazuki Shimizu
  */
+// 相当于一个桥梁，关联起来 mapper配置文件 和 接口文件。
 public class MapperMethod {
-
+  //fxc2-从configuration中获取方法的命名空间.方法名以及SQL语句的类型
   private final SqlCommand command;
+  //封装mapper接口方法的相关信息（入参，返回类型）；
+//  fxc3. 参数解析器 -paramNameResolver 完成最后一步的翻译
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
@@ -56,9 +58,12 @@ public class MapperMethod {
 
   public Object execute(SqlSession sqlSession, Object[] args) {
     Object result;
+    //根据sql语句类型以及接口返回的参数选择调用不同的
+//    fxc1.一步一步精确，先判断 sql类型，再根据 返回参数类型； 最终确定 是调用 sqlSession 的哪个方法！
+//    如selectOne； ibatis的原生方法
     switch (command.getType()) {
       case INSERT: {
-        Object param = method.convertArgsToSqlCommandParam(args);
+    	Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
       }
@@ -73,21 +78,23 @@ public class MapperMethod {
         break;
       }
       case SELECT:
-        if (method.returnsVoid() && method.hasResultHandler()) {
+        if (method.returnsVoid() && method.hasResultHandler()) {//返回值为void
           executeWithResultHandler(sqlSession, args);
           result = null;
-        } else if (method.returnsMany()) {
+        } else if (method.returnsMany()) {//返回值为集合或者数组
           result = executeForMany(sqlSession, args);
-        } else if (method.returnsMap()) {
+        } else if (method.returnsMap()) {//返回值为map
           result = executeForMap(sqlSession, args);
-        } else if (method.returnsCursor()) {
+        } else if (method.returnsCursor()) {//返回值为游标
           result = executeForCursor(sqlSession, args);
-        } else {
+        } else {//处理返回为单一对象的情况
+          //通过参数解析器解析解析参数
           Object param = method.convertArgsToSqlCommandParam(args);
+//         fxc4.1- 最终的成功，翻译为这个格式
           result = sqlSession.selectOne(command.getName(), param);
-          if (method.returnsOptional()
-              && (result == null || !method.getReturnType().equals(result.getClass()))) {
-            result = Optional.ofNullable(result);
+          if (method.returnsOptional() &&
+              (result == null || !method.getReturnType().equals(result.getClass()))) {
+            result = OptionalUtil.ofNullable(result);
           }
         }
         break;
@@ -98,7 +105,7 @@ public class MapperMethod {
         throw new BindingException("Unknown execution method for: " + command.getName());
     }
     if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
-      throw new BindingException("Mapper method '" + command.getName()
+      throw new BindingException("Mapper method '" + command.getName() 
           + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
     }
     return result;
@@ -124,8 +131,8 @@ public class MapperMethod {
     MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(command.getName());
     if (!StatementType.CALLABLE.equals(ms.getStatementType())
         && void.class.equals(ms.getResultMaps().get(0).getType())) {
-      throw new BindingException("method " + command.getName()
-          + " needs either a @ResultMap annotation, a @ResultType annotation,"
+      throw new BindingException("method " + command.getName() 
+          + " needs either a @ResultMap annotation, a @ResultType annotation," 
           + " or a resultType attribute in XML so a ResultHandler can be used as a parameter.");
     }
     Object param = method.convertArgsToSqlCommandParam(args);
@@ -142,9 +149,10 @@ public class MapperMethod {
     Object param = method.convertArgsToSqlCommandParam(args);
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
-      result = sqlSession.selectList(command.getName(), param, rowBounds);
+//         fxc4.2- 最终的成功，翻译为这个格式
+      result = sqlSession.<E>selectList(command.getName(), param, rowBounds);
     } else {
-      result = sqlSession.selectList(command.getName(), param);
+      result = sqlSession.<E>selectList(command.getName(), param);
     }
     // issue #510 Collections & arrays support
     if (!method.getReturnType().isAssignableFrom(result.getClass())) {
@@ -162,9 +170,11 @@ public class MapperMethod {
     Object param = method.convertArgsToSqlCommandParam(args);
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
-      result = sqlSession.selectCursor(command.getName(), param, rowBounds);
+
+//         fxc4.4- 最终的成功，翻译为这个格式
+      result = sqlSession.<T>selectCursor(command.getName(), param, rowBounds);
     } else {
-      result = sqlSession.selectCursor(command.getName(), param);
+      result = sqlSession.<T>selectCursor(command.getName(), param);
     }
     return result;
   }
@@ -184,7 +194,7 @@ public class MapperMethod {
       for (int i = 0; i < list.size(); i++) {
         Array.set(array, i, list.get(i));
       }
-      return array;
+    return array;
     } else {
       return list.toArray((E[])array);
     }
@@ -195,9 +205,11 @@ public class MapperMethod {
     Object param = method.convertArgsToSqlCommandParam(args);
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
-      result = sqlSession.selectMap(command.getName(), param, method.getMapKey(), rowBounds);
+
+//         fxc4.3- 最终的成功，翻译为这个格式
+      result = sqlSession.<K, V>selectMap(command.getName(), param, method.getMapKey(), rowBounds);
     } else {
-      result = sqlSession.selectMap(command.getName(), param, method.getMapKey());
+      result = sqlSession.<K, V>selectMap(command.getName(), param, method.getMapKey());
     }
     return result;
   }
@@ -217,26 +229,28 @@ public class MapperMethod {
   }
 
   public static class SqlCommand {
-
+	//sql的名称，命名空间+方法名称
     private final String name;
+    //获取sql语句的类型
     private final SqlCommandType type;
 
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
-      final String methodName = method.getName();
+      final String methodName = method.getName();//获取方法名称
       final Class<?> declaringClass = method.getDeclaringClass();
+      //fxc-从configuration中获取 mappedStatement(核心数据结构)
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
       if (ms == null) {
-        if (method.getAnnotation(Flush.class) != null) {
+        if(method.getAnnotation(Flush.class) != null){
           name = null;
           type = SqlCommandType.FLUSH;
         } else {
           throw new BindingException("Invalid bound statement (not found): "
               + mapperInterface.getName() + "." + methodName);
         }
-      } else {
-        name = ms.getId();
-        type = ms.getSqlCommandType();
+      } else {//如果mappedStatement不为空
+        name = ms.getId();//获取sql的名称，命名空间+方法名称
+        type = ms.getSqlCommandType();//获取sql语句的类型
         if (type == SqlCommandType.UNKNOWN) {
           throw new BindingException("Unknown execution method for: " + name);
         }
@@ -250,12 +264,13 @@ public class MapperMethod {
     public SqlCommandType getType() {
       return type;
     }
-
+  //从configuration中获取mappedStatement
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
+      //sql语句的id为命名空间+方法名字
       String statementId = mapperInterface.getName() + "." + methodName;
       if (configuration.hasStatement(statementId)) {
-        return configuration.getMappedStatement(statementId);
+        return configuration.getMappedStatement(statementId);//从configuration中获取mappedStatement
       } else if (mapperInterface.equals(declaringClass)) {
         return null;
       }
@@ -274,18 +289,19 @@ public class MapperMethod {
 
   public static class MethodSignature {
 
-    private final boolean returnsMany;
-    private final boolean returnsMap;
-    private final boolean returnsVoid;
-    private final boolean returnsCursor;
-    private final boolean returnsOptional;
-    private final Class<?> returnType;
+    private final boolean returnsMany;//返回参数是否为集合类型或数组
+    private final boolean returnsMap;//返回参数是否为map
+    private final boolean returnsVoid;//返回值为空
+    private final boolean returnsCursor;//返回值是否为游标类型
+    private final boolean returnsOptional;//返回值是否为Optional
+    private final Class<?> returnType;//返回值类型
     private final String mapKey;
     private final Integer resultHandlerIndex;
     private final Integer rowBoundsIndex;
-    private final ParamNameResolver paramNameResolver;
+    private final ParamNameResolver paramNameResolver;//该方法的参数解析器
 
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
+      //通过类型解析器获取方法的返回值类型
       Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, mapperInterface);
       if (resolvedReturnType instanceof Class<?>) {
         this.returnType = (Class<?>) resolvedReturnType;
@@ -294,10 +310,11 @@ public class MapperMethod {
       } else {
         this.returnType = method.getReturnType();
       }
+      //初始化返回值等字段
       this.returnsVoid = void.class.equals(this.returnType);
       this.returnsMany = configuration.getObjectFactory().isCollection(this.returnType) || this.returnType.isArray();
       this.returnsCursor = Cursor.class.equals(this.returnType);
-      this.returnsOptional = Optional.class.equals(this.returnType);
+      this.returnsOptional = Jdk.optionalExists && Optional.class.equals(this.returnType);
       this.mapKey = getMapKey(method);
       this.returnsMap = this.mapKey != null;
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
@@ -350,7 +367,7 @@ public class MapperMethod {
     }
 
     /**
-     * return whether return type is {@code java.util.Optional}.
+     * return whether return type is {@code java.util.Optional}
      * @return return {@code true}, if return type is {@code java.util.Optional}
      * @since 3.5.0
      */

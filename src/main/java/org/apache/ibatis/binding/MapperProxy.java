@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,20 +20,25 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 
+import org.apache.ibatis.lang.UsesJava7;
 import org.apache.ibatis.reflection.ExceptionUtil;
 import org.apache.ibatis.session.SqlSession;
 
 /**
+ * 实现了InvocationHandler接口，它是增强mapper接口的实现
+ * 
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   private static final long serialVersionUID = -6424540398559729838L;
-  private final SqlSession sqlSession;
-  private final Class<T> mapperInterface;
+  private final SqlSession sqlSession;//记录关联的sqlsession对象
+  private final Class<T> mapperInterface;//mapper接口对应的class对象；
+//key是mapper接口中的某个方法的method对象，value是对应的MapperMethod，MapperMethod对象不记录任何状态信息，所以它可以在多个代理对象之间共享
   private final Map<Method, MapperMethod> methodCache;
 
   public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
@@ -44,16 +49,20 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+//    fxc-具体的动态代理 增强-处理
     try {
-      if (Object.class.equals(method.getDeclaringClass())) {
+      if (Object.class.equals(method.getDeclaringClass())) {//如果是Object本身的方法不增强
         return method.invoke(this, args);
-      } else if (method.isDefault()) {
+      } else if (isDefaultMethod(method)) {
+//        默认方法 
         return invokeDefaultMethod(proxy, method, args);
       }
     } catch (Throwable t) {
       throw ExceptionUtil.unwrapThrowable(t);
     }
+    //从缓存中获取mapperMethod对象，如果缓存中没有，则创建一个，并添加到缓存中
     final MapperMethod mapperMethod = cachedMapperMethod(method);
+    //调用execute方法执行sql
     return mapperMethod.execute(sqlSession, args);
   }
 
@@ -61,6 +70,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     return methodCache.computeIfAbsent(method, k -> new MapperMethod(mapperInterface, method, sqlSession.getConfiguration()));
   }
 
+  @UsesJava7
   private Object invokeDefaultMethod(Object proxy, Method method, Object[] args)
       throws Throwable {
     final Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class
@@ -74,5 +84,14 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
             MethodHandles.Lookup.PRIVATE | MethodHandles.Lookup.PROTECTED
                 | MethodHandles.Lookup.PACKAGE | MethodHandles.Lookup.PUBLIC)
         .unreflectSpecial(method, declaringClass).bindTo(proxy).invokeWithArguments(args);
+  }
+
+  /**
+   * Backport of java.lang.reflect.Method#isDefault()
+   */
+  private boolean isDefaultMethod(Method method) {
+    return (method.getModifiers()
+        & (Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC)) == Modifier.PUBLIC
+        && method.getDeclaringClass().isInterface();
   }
 }
