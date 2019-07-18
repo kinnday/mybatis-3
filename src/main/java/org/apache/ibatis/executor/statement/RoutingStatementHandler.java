@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -30,14 +30,15 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
 /**
+ * Excutor组件真正实例化的子类，使用静态代理模式，根据上下文决定创建哪个具体实体类；
  * @author Clinton Begin
  */
 public class RoutingStatementHandler implements StatementHandler {
 
-  private final StatementHandler delegate;
+  private final StatementHandler delegate;//底层封装的真正的StatementHandler对象
 
   public RoutingStatementHandler(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
-
+    //RoutingStatementHandler最主要的功能就是根据mappedStatment的配置，生成一个对应的StatementHandler对象并赋值给delegate
     switch (ms.getStatementType()) {
       case STATEMENT:
         delegate = new SimpleStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
@@ -76,7 +77,7 @@ public class RoutingStatementHandler implements StatementHandler {
 
   @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
-    return delegate.query(statement, resultHandler);
+    return delegate.<E>query(statement, resultHandler);
   }
 
   @Override

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.apache.ibatis.executor.loader.javassist;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javassist.util.proxy.MethodHandler;
@@ -43,6 +44,7 @@ import org.apache.ibatis.session.Configuration;
  */
 public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.ProxyFactory {
 
+  private static final Log log = LogFactory.getLog(JavassistProxyFactory.class);
   private static final String FINALIZE_METHOD = "finalize";
   private static final String WRITE_REPLACE_METHOD = "writeReplace";
 
@@ -63,6 +65,11 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     return EnhancedDeserializationProxyImpl.createProxy(target, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
   }
 
+  @Override
+  public void setProperties(Properties properties) {
+      // Not Implemented
+  }
+
   static Object crateProxy(Class<?> type, MethodHandler callback, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
 
     ProxyFactory enhancer = new ProxyFactory();
@@ -71,8 +78,8 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
     try {
       type.getDeclaredMethod(WRITE_REPLACE_METHOD);
       // ObjectOutputStream will call writeReplace of objects returned by writeReplace
-      if (LogHolder.log.isDebugEnabled()) {
-        LogHolder.log.debug(WRITE_REPLACE_METHOD + " method was found on bean " + type + ", make sure it returns this");
+      if (log.isDebugEnabled()) {
+        log.debug(WRITE_REPLACE_METHOD + " method was found on bean " + type + ", make sure it returns this");
       }
     } catch (NoSuchMethodException e) {
       enhancer.setInterfaces(new Class[]{WriteReplaceInterface.class});
@@ -189,9 +196,4 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       return new JavassistSerialStateHolder(userBean, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
     }
   }
-
-  private static class LogHolder {
-    private static final Log log = LogFactory.getLog(JavassistProxyFactory.class);
-  }
-
 }

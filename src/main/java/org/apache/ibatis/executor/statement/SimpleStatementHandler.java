@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.executor.keygen.SelectKeyGenerator;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.ResultSetType;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
@@ -70,29 +69,31 @@ public class SimpleStatementHandler extends BaseStatementHandler {
 
   @Override
   public <E> List<E> query(Statement statement, ResultHandler resultHandler) throws SQLException {
-    String sql = boundSql.getSql();
-    statement.execute(sql);
-    return resultSetHandler.handleResultSets(statement);
+    String sql = boundSql.getSql();//获取sql语句
+    statement.execute(sql);//执行sql语句
+    return resultSetHandler.<E>handleResultSets(statement);//使用resultSetHandler处理查询结果
   }
 
   @Override
   public <E> Cursor<E> queryCursor(Statement statement) throws SQLException {
     String sql = boundSql.getSql();
     statement.execute(sql);
-    return resultSetHandler.handleCursorResultSets(statement);
+    return resultSetHandler.<E>handleCursorResultSets(statement);
   }
 
   @Override
+  //使用底层的statment对象来完成对数据库的操作
   protected Statement instantiateStatement(Connection connection) throws SQLException {
-    if (mappedStatement.getResultSetType() == ResultSetType.DEFAULT) {
-      return connection.createStatement();
-    } else {
+    if (mappedStatement.getResultSetType() != null) {
+    	//设置结果集是否可以滚动以及其游标是否可以上下移动，设置结果集是否可更新
       return connection.createStatement(mappedStatement.getResultSetType().getValue(), ResultSet.CONCUR_READ_ONLY);
+    } else {
+      return connection.createStatement();
     }
   }
 
   @Override
-  public void parameterize(Statement statement) {
+  public void parameterize(Statement statement) throws SQLException {
     // N/A
   }
 

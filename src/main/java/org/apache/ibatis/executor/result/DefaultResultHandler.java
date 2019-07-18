@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.apache.ibatis.session.ResultHandler;
  * @author Clinton Begin
  */
 public class DefaultResultHandler implements ResultHandler<Object> {
-
+  //暂存的结果集list
   private final List<Object> list;
 
   public DefaultResultHandler() {
@@ -39,7 +39,7 @@ public class DefaultResultHandler implements ResultHandler<Object> {
   }
 
   @Override
-  public void handleResult(ResultContext<?> context) {
+  public void handleResult(ResultContext<? extends Object> context) {
     list.add(context.getResultObject());
   }
 

@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -44,9 +44,8 @@ public class ErrorContext {
   }
 
   public ErrorContext store() {
-    ErrorContext newContext = new ErrorContext();
-    newContext.stored = this;
-    LOCAL.set(newContext);
+    stored = this;
+    LOCAL.set(new ErrorContext());
     return LOCAL.get();
   }
 
