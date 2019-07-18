@@ -36,13 +36,14 @@ import org.apache.ibatis.cache.CacheException;
  * @author Eduardo Macarron
  *
  */
+//fxc-重点解析； 防止 缓存雪崩； 控制请求直接到 数据库的数量。
 public class BlockingCache implements Cache {
 
   //阻塞的超时时长
   private long timeout;
   //被装饰的底层对象，一般是PerpetualCache
   private final Cache delegate;
-  //锁对象集，粒度到key值
+  //锁对象集，粒度到key值（而不是全局的lock ）； 一个独立的 map容器
   private final ConcurrentHashMap<Object, ReentrantLock> locks;
 
   public BlockingCache(Cache delegate) {
@@ -71,7 +72,9 @@ public class BlockingCache implements Cache {
 
   @Override
   public Object getObject(Object key) {
-    acquireLock(key);//根据key获得锁对象，获取锁成功加锁，获取锁失败阻塞一段时间重试
+    //根据key获得锁对象，获取锁成功加锁，获取锁失败阻塞一段时间重试
+    acquireLock(key);
+//    获取成功后 拿到缓存数据
     Object value = delegate.getObject(key);
     if (value != null) {//获取数据成功的，要释放锁
       releaseLock(key);
@@ -98,7 +101,9 @@ public class BlockingCache implements Cache {
   
   private ReentrantLock getLockForKey(Object key) {
     ReentrantLock lock = new ReentrantLock();//创建锁
-    ReentrantLock previous = locks.putIfAbsent(key, lock);//把新锁添加到locks集合中，如果添加成功使用新锁，如果添加失败则使用locks集合中的锁
+    //把新锁添加到locks集合中，如果添加成功使用新锁，如果添加失败则使用locks集合中的锁
+    ReentrantLock previous = locks.putIfAbsent(key, lock);
+//    如果是空的，说明加锁失败
     return previous == null ? lock : previous;
   }
   

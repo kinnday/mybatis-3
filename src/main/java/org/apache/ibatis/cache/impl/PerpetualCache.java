@@ -25,6 +25,7 @@ import org.apache.ibatis.cache.CacheException;
 /**
  * @author Clinton Begin
  */
+// 具体的缓存实现类； 也就是 mybatis的一级缓存。
 public class PerpetualCache implements Cache {
 
   private final String id;

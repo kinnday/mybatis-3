@@ -24,6 +24,7 @@ class FifoCacheTest {
 
   @Test
   void shouldRemoveFirstItemInBeyondFiveEntries() {
+// fxc-标准的装饰器模式
     FifoCache cache = new FifoCache(new PerpetualCache("default"));
     cache.setSize(5);
     for (int i = 0; i < 5; i++) {

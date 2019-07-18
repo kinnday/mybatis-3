@@ -24,6 +24,7 @@ import org.apache.ibatis.reflection.ArrayUtil;
 /**
  * @author Clinton Begin
  */
+// 缓存查找的键值
 public class CacheKey implements Cloneable, Serializable {
 
   private static final long serialVersionUID = 1146682552656046210L;
@@ -46,6 +47,11 @@ public class CacheKey implements Cloneable, Serializable {
     this.multiplier = DEFAULT_MULTIPLYER;
     this.count = 0;
     this.updateList = new ArrayList<>();
+//    需要比较的是 4个因子
+//    ü mappedStatment的id
+//    ü 指定查询结果集的范围（分页信息）
+//    ü 查询所使用的SQL语句
+//    ü 用户传递给SQL语句的实际参数值
   }
 
   public CacheKey(Object[] objects) {
@@ -63,6 +69,7 @@ public class CacheKey implements Cloneable, Serializable {
     //更新count、checksum以及hashcode的值
     count++;
     checksum += baseHashCode;
+//  算法目的： 减少 hashcode的重复几率
     baseHashCode *= count;
     hashcode = multiplier * hashcode + baseHashCode;
     //将对象添加到updateList中
@@ -86,7 +93,7 @@ public class CacheKey implements Cloneable, Serializable {
 
     final CacheKey cacheKey = (CacheKey) object;
 
-    if (hashcode != cacheKey.hashcode) {//hashcode是否相同
+    if (hashcode != cacheKey.hashcode) {//hashcode是否相同【优先比较】
       return false;
     }
     if (checksum != cacheKey.checksum) {//checksum是否相同

@@ -201,6 +201,11 @@ public abstract class BaseExecutor implements Executor {
     cacheKey.update(rowBounds.getOffset());
     cacheKey.update(rowBounds.getLimit());
     cacheKey.update(boundSql.getSql());
+//    CacheKey 需要的， 比较的是 4个因子
+//    ü mappedStatment的id
+//    ü 指定查询结果集的范围（分页信息）
+//    ü 查询所使用的SQL语句
+//    ü 用户传递给SQL语句的实际参数值
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     TypeHandlerRegistry typeHandlerRegistry = ms.getConfiguration().getTypeHandlerRegistry();
     // mimic DefaultParameterHandler logic
