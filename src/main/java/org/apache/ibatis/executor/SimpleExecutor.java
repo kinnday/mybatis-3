@@ -58,13 +58,12 @@ public class SimpleExecutor extends BaseExecutor {
   public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
     Statement stmt = null;
     try {
-      //1.获取configuration对象
-      Configuration configuration = ms.getConfiguration();
-      //2.创建StatementHandler对象，
+      Configuration configuration = ms.getConfiguration();//获取configuration对象
+      //创建StatementHandler对象，
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
-      //3.StatementHandler对象创建stmt,并使用parameterHandler对占位符进行处理
+      //StatementHandler对象创建stmt,并使用parameterHandler对占位符进行处理
       stmt = prepareStatement(handler, ms.getStatementLog());
-      //4.通过statementHandler对象调用ResultSetHandler将结果集转化为指定对象返回
+      //通过statementHandler对象调用ResultSetHandler将结果集转化为指定对象返回
       return handler.<E>query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
@@ -87,8 +86,7 @@ public class SimpleExecutor extends BaseExecutor {
   //创建Statement
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
-//    这里是入库，与 日志模块关联起来
-    //获取connection对象的---动态代理，添加日志能力；
+    //获取connection对象的动态代理，添加日志能力；
     Connection connection = getConnection(statementLog);
     //通过不同的StatementHandler，利用connection创建（prepare）Statement
     stmt = handler.prepare(connection, transaction.getTimeout());

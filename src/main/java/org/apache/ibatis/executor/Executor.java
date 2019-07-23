@@ -33,7 +33,6 @@ import org.apache.ibatis.transaction.Transaction;
  * MyBaits核心接口之一，定义了数据库操作最基本的方法，SqlSession的功能都是基于它来实现的
  * 
  */
-// 最终操作数据库的核心接口！！！
 public interface Executor {
 
   ResultHandler NO_RESULT_HANDLER = null;

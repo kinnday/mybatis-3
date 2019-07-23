@@ -47,13 +47,9 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 /**
  * @author Clinton Begin
  * 
- * 抽象类，实现了executor接口的大部分方法，
- * 主要提供了缓存管理和事务管理的能力，
- * 其他子类需要实现的抽象方法为：doUpdate,doQuery等方法；
+ * 抽象类，实现了executor接口的大部分方法，主要提供了缓存管理和事务管理的能力，其他子类需要实现的抽象方法为：doUpdate,doQuery等方法；
  * 
  */
-//fxc- 标准的模板模式；
-//  定义一系列步骤，某些细节 需要子类具体实现
 public abstract class BaseExecutor implements Executor {
 
   private static final Log log = LogFactory.getLog(BaseExecutor.class);
@@ -62,8 +58,7 @@ public abstract class BaseExecutor implements Executor {
   protected Executor wrapper;//封装的Executor对象
 
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;//延迟加载的队列
-  //fxc- 一级缓存的实现，PerpetualCache [源码上看出来， 用或不用 都是存在的]
-  protected PerpetualCache localCache;
+  protected PerpetualCache localCache;//一级缓存的实现，PerpetualCache
   protected PerpetualCache localOutputParameterCache;//一级缓存用于缓存输出的结果
   protected Configuration configuration;//全局唯一configuration对象的引用
 
@@ -138,13 +133,10 @@ public abstract class BaseExecutor implements Executor {
   }
 
   @Override
-//  fxc-exec-1-调用抽象接口的query方法
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
 	//获取sql语句信息，包括占位符，参数等信息
-//    fxc-exec-2- 获取具体sql
     BoundSql boundSql = ms.getBoundSql(parameter);
     //拼装缓存的key值
-//    fxc-exec-3- 获取cacheKey,查询缓存
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
  }
@@ -156,7 +148,6 @@ public abstract class BaseExecutor implements Executor {
     if (closed) {//检查当前executor是否关闭
       throw new ExecutorException("Executor was closed.");
     }
-//    fxc-禁用一级缓存-method1-lushCache配置为true，则需要清空一级缓存
     if (queryStack == 0 && ms.isFlushCacheRequired()) {//非嵌套查询，并且FlushCache配置为true，则需要清空一级缓存
       clearLocalCache();
     }
@@ -165,11 +156,9 @@ public abstract class BaseExecutor implements Executor {
       queryStack++;//查询层次加一
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;//查询以及缓存
       if (list != null) {
-//        fxc-exec-4.1-
-          //针对调用存储过程的结果处理
+    	 //针对调用存储过程的结果处理
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
-//        fxc-exec-4.2-
     	 //缓存未命中，从数据库加载数据
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
@@ -184,8 +173,6 @@ public abstract class BaseExecutor implements Executor {
       }
       // issue #601
       deferredLoads.clear();
-
-//    fxc-禁用一级缓存-method2- LocalCacheScope.STATEMENT
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {//如果当前sql的一级缓存配置为STATEMENT，查询完既清空一集缓存
         // issue #482
         clearLocalCache();
@@ -346,14 +333,12 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     localCache.putObject(key, EXECUTION_PLACEHOLDER);//在缓存中添加占位符
     try {
-//      fxc-template-唯一需要继承类具体实现的抽象方法！！！
       //调用抽象方法doQuery，方法查询数据库并返回结果，可选的实现包括：simple、reuse、batch
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
       localCache.removeObject(key);//在缓存中删除占位符
     }
-//    fxc-exec-5- 查询成功 放入缓存
-      localCache.putObject(key, list);//将真正的结果对象添加到一级缓存
+    localCache.putObject(key, list);//将真正的结果对象添加到一级缓存
     if (ms.getStatementType() == StatementType.CALLABLE) {//如果是调用存储过程
       localOutputParameterCache.putObject(key, parameter);//缓存输出类型结果参数
     }
